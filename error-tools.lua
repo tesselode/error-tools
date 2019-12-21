@@ -1,3 +1,21 @@
+local function getUserErrorLevel()
+	local source = debug.getinfo(1).source
+	local level = 1
+	while debug.getinfo(level).source == source do
+		level = level + 1
+	end
+	return level - 1
+end
+
+local function getUserCalledFunctionName()
+	return debug.getinfo(getUserErrorLevel() - 1).name
+end
+
+local function checkCondition(condition, message)
+	if condition then return end
+	error(message, getUserErrorLevel())
+end
+
 local function getAllowedTypesText(...)
 	local numberOfArguments = select('#', ...)
 	if numberOfArguments >= 3 then
@@ -13,32 +31,51 @@ local function getAllowedTypesText(...)
 	return select(1, ...)
 end
 
-local function getBadArgumentErrorText(argumentIndex, functionName, argumentType, ...)
-	return string.format("bad argument #%i to '%s' (expected %s, got %s)",
-		argumentIndex, functionName, getAllowedTypesText(...), argumentType)
+local function checkArgument(argumentIndex, argument, ...)
+	for i = 1, select('#', ...) do
+		if type(argument) == select(i, ...) then
+			return
+		end
+	end
+	error(
+		string.format(
+			"bad argument #%i to '%s' (expected %s, got %s)",
+			argumentIndex,
+			getUserCalledFunctionName(),
+			getAllowedTypesText(...),
+			type(argument)
+		),
+		getUserErrorLevel()
+	)
 end
 
-local function getUserCalledFunctionName()
-	local source = debug.getinfo(1).source
-	local level = 1
-	while debug.getinfo(level).source == source do
-		level = level + 1
+local function checkArguments(argumentSet, ...)
+	for i = 1, select('#', ...) do
+		checkArgument(i, select(i, ...), unpack(argumentSet[i]))
 	end
-	return debug.getinfo(level - 1).name
 end
+
+-- the following is test code
+local testArgumentSet = {
+	{'number'},
+	{'string'},
+	{'table'},
+	{'number', 'string'},
+}
 
 local test = {}
 
-function test.doOtherOtherThing()
-	print(getUserCalledFunctionName())
+function test.doOtherOtherThing(a, b, c, d)
+	checkArguments(testArgumentSet, a, b, c, d)
+	checkCondition(a < 10, 'a must be less than 10')
 end
 
-function test.doOtherThing()
-	test.doOtherOtherThing()
+function test.doOtherThing(...)
+	test.doOtherOtherThing(...)
 end
 
-function test.doThing()
-	test.doOtherThing()
+function test.doThing(...)
+	test.doOtherThing(...)
 end
 
 return test
