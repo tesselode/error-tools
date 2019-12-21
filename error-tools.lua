@@ -49,6 +49,11 @@ local function checkArgument(argumentIndex, argument, ...)
 	)
 end
 
+local function checkOptionalArgument(argumentIndex, argument, ...)
+	if argument == nil then return end
+	checkArgument(argumentIndex, argument, ...)
+end
+
 local function checkArguments(argumentSet, ...)
 	for i = 1, select('#', ...) do
 		checkArgument(i, select(i, ...), unpack(argumentSet[i]))
