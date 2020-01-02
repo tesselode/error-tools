@@ -70,12 +70,6 @@ local function checkOptionalArgument(argumentIndex, argument, ...)
 	checkArgument(argumentIndex, argument, ...)
 end
 
-local function checkArguments(argumentSet, ...)
-	for i = 1, select('#', ...) do
-		checkArgument(i, select(i, ...), unpack(argumentSet[i]))
-	end
-end
-
 -- the following is test code
 local testArgumentSet = {
 	{'number'},
