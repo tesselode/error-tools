@@ -1,7 +1,12 @@
 local test = require 'error-tools'
 
+local t = {}
+setmetatable(t, {
+	__call = function() end,
+})
+
 local function heck()
-	test.doThing(11, 'asdf', {}, 3)
+	test.doThing(t)
 end
 
 heck()

@@ -51,6 +51,12 @@ end
 -- lua and love produce
 local function checkArgument(argumentIndex, argument, ...)
 	for i = 1, select('#', ...) do
+		-- allow tables with the __call metamethod to be treated like functions
+		if select(i, ...) == 'function' then
+			if type(argument) == 'table' and getmetatable(argument).__call then
+				return
+			end
+		end
 		if type(argument) == select(i, ...) then return end
 	end
 	error(
@@ -71,26 +77,10 @@ local function checkOptionalArgument(argumentIndex, argument, ...)
 end
 
 -- the following is test code
-local testArgumentSet = {
-	{'number'},
-	{'string'},
-	{'table'},
-	{'number', 'string'},
-}
-
 local test = {}
 
-function test.doOtherOtherThing(a, b, c, d)
-	checkArguments(testArgumentSet, a, b, c, d)
-	checkCondition(a < 10, 'a must be less than 10')
-end
-
-function test.doOtherThing(...)
-	test.doOtherOtherThing(...)
-end
-
-function test.doThing(...)
-	test.doOtherThing(...)
+function test.doThing(a)
+	checkArgument(1, a, 'function')
 end
 
 return test
